@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as path from 'node:path';
 import { HttpMethod } from 'aws-cdk-lib/aws-events';
@@ -12,6 +13,8 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
     super(scope, id, props);
 
     const stage = this.node.tryGetContext('stage') || 'dev';
+    const accountId = cdk.Stack.of(this).account;
+    const region = cdk.Stack.of(this).region;
 
     const bucket = new s3.Bucket(this, `Bucket-${stage}`, {
       bucketName: `slack2bedrock-image-bucket-${stage}`,
@@ -35,6 +38,17 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
                 `${bucket.bucketArn}/*`,
               ],
             }),
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                'logs:CreateLogGroup',
+                'logs:CreateLogStream',
+                'logs:PutLogEvents',
+              ],
+              resources: [
+                `arn:aws:logs:${region}:${accountId}:log-group:*:*`,
+              ],
+            }),
           ],
         }),
       },
@@ -56,6 +70,11 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
         allowedMethods: [HttpMethod.GET, HttpMethod.POST],
         allowedOrigins: ['*'],
       },
+    });
+
+    new LogGroup(this, `LogGroup-${stage}`, {
+      logGroupName: `/aws/lambda/${lambdaFunc.functionName}`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
   }
 }

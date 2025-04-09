@@ -67,7 +67,7 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
     const publisherLambda = new lambda.Function(this, `PublisherHandler-${stage}`, {
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/publisher'), {
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/publisher/src'), {
         exclude: ['Pipfile', 'Pipfile.lock', 'requirements.txt', '__pycache__'],
       }),
       role: publisherLambdaRole,
@@ -149,7 +149,7 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
     const subscriberLambda = new lambda.Function(this, `SubscriberHandler-${stage}`, {
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/subscriber'), {
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/subscriber/src'), {
         exclude: ['Pipfile', 'Pipfile.lock', 'requirements.txt', '__pycache__'],
       }),
       role: subscriberLambdaRole,

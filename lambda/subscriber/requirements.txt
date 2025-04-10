@@ -1,0 +1,2 @@
+-i https://pypi.org/simple
+slack-sdk==3.35.0; python_version >= '3.6'

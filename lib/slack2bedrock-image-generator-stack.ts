@@ -65,10 +65,10 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
               actions: [
                 'ssm:GetParameter',
                 'ssm:GetParameters',
+                'ssm:GetParametersByPath',
               ],
               resources: [
-                `arn:aws:ssm:${region}:${accountId}:parameter/slack2bedrock-image-generator/${stage}/SLACK_BOT_TOKEN`,
-                `arn:aws:ssm:${region}:${accountId}:parameter/slack2bedrock-image-generator/${stage}/SLACK_SIGNING_SECRET`,
+                `arn:aws:ssm:${region}:${accountId}:parameter/slack2bedrock-image-generator/${stage}*`,
               ],
             }),
             new iam.PolicyStatement({
@@ -99,8 +99,7 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       environment: {
         SQS_QUEUE_URL: queue.queueUrl,
-        SLACK_BOT_TOKEN_SSM_KEY: `/slack2bedrock-image-generator/${stage}/SLACK_BOT_TOKEN`,
-        SLACK_SIGNING_SECRET_SSM_KEY: `/slack2bedrock-image-generator/${stage}/SLACK_SIGNING_SECRET`,
+        STAGE: stage,
       },
     });
 

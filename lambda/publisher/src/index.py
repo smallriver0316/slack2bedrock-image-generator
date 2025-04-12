@@ -14,17 +14,18 @@ sqs = boto3.client("sqs")
 ssm = boto3.client("ssm")
 
 
-def get_slack_token(key: str):
-    return ssm.get_parameter(
-        Name=key,
-        WithDecryption=True
-    )["Parameter"]["Value"]
+STAGE = os.environ.get("STAGE", "")
+params = ssm.get_parameters_by_path(
+    Path=f"/slack2bedrock-image-generator/{STAGE}/",
+    Recursive=True,
+    WithDecryption=True
+)
 
-
-SLACK_BOT_TOKEN = get_slack_token(
-    os.environ.get("SLACK_BOT_TOKEN_SSM_KEY", ""))
-SLACK_SIGNING_SECRET = get_slack_token(
-    os.environ.get("SLACK_SIGNING_SECRET_SSM_KEY", ""))
+for param in params["Parameters"]:
+    if param["Name"].endswith("SLACK_BOT_TOKEN"):
+        SLACK_BOT_TOKEN = param["Value"]
+    if param["Name"].endswith("SLACK_SIGNING_SECRET"):
+        SLACK_SIGNING_SECRET = param["Value"]
 
 app = App(
     token=SLACK_BOT_TOKEN,

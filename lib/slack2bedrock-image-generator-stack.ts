@@ -182,6 +182,7 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       environment: {
         BUCKET_NAME: `slack2bedrock-image-bucket-${stage}`,
+        MODEL_ID: 'stability.stable-diffusion-xl-v1',
       },
     });
 

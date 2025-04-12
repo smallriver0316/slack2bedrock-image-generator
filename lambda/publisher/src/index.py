@@ -13,8 +13,9 @@ logger.setLevel(logging.INFO)
 sqs = boto3.client("sqs")
 ssm = boto3.client("ssm")
 
-
 STAGE = os.environ.get("STAGE", "")
+SQS_QUEUE_URL = os.environ.get("SQS_QUEUE_URL", "")
+
 params = ssm.get_parameters_by_path(
     Path=f"/slack2bedrock-image-generator/{STAGE}/",
     Recursive=True,
@@ -42,7 +43,7 @@ def handle_app_mention_events(event, say):
     input_text = re.sub("<@.+>", "", event.get("text", "")).strip()
 
     sqs.send_message(
-        QueueUrl=os.environ.get("SQS_QUEUE_URL"),
+        QueueUrl=SQS_QUEUE_URL,
         MessageBody=json.dumps({
             "channel_id": channel_id,
             "input_text": input_text

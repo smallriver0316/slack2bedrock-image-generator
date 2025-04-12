@@ -11,10 +11,24 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 sqs = boto3.client("sqs")
+ssm = boto3.client("ssm")
+
+
+def get_slack_token(key: str):
+    return ssm.get_parameter(
+        Name=key,
+        WithDecryption=True
+    )["Parameter"]["Value"]
+
+
+SLACK_BOT_TOKEN = get_slack_token(
+    os.environ.get("SLACK_BOT_TOKEN_SSM_KEY", ""))
+SLACK_SIGNING_SECRET = get_slack_token(
+    os.environ.get("SLACK_SIGNING_SECRET_SSM_KEY", ""))
 
 app = App(
-    token=os.environ.get("SLACK_BOT_TOKEN", ""),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET", ""),
+    token=SLACK_BOT_TOKEN,
+    signing_secret=SLACK_SIGNING_SECRET,
     process_before_response=True)
 
 

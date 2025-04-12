@@ -5,9 +5,10 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import * as path from 'node:path';
 import { HttpMethod } from 'aws-cdk-lib/aws-events';
-
+import { slackConfig } from '../config/slack_config';
 
 export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -30,6 +31,18 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // SSM parameter
+    new StringParameter(this, `SSMParameter4SlackBotToken-${stage}`, {
+      parameterName: `/slack2bedrock-image-generator/${stage}/SLACK_BOT_TOKEN`,
+      stringValue: slackConfig.SLACK_BOT_TOKEN,
+      description: 'Slack bot token for the image generator',
+    });
+    new StringParameter(this, `SSMParameter4SlackSigningSecret-${stage}`, {
+      parameterName: `/slack2bedrock-image-generator/${stage}/SLACK_SIGNING_SECRET`,
+      stringValue: slackConfig.SLACK_SIGNING_SECRET,
+      description: 'Slack signing secret for the image generator',
+    });
+
     // Lambda function to handle image generation requests
     // IAM role
     const publisherLambdaRole = new iam.Role(this, `PublisherLambdaRole-${stage}`, {
@@ -45,6 +58,17 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
               ],
               resources: [
                 queue.queueArn,
+              ],
+            }),
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                'ssm:GetParameter',
+                'ssm:GetParameters',
+              ],
+              resources: [
+                `arn:aws:ssm:${region}:${accountId}:parameter/slack2bedrock-image-generator/${stage}/SLACK_BOT_TOKEN`,
+                `arn:aws:ssm:${region}:${accountId}:parameter/slack2bedrock-image-generator/${stage}/SLACK_SIGNING_SECRET`,
               ],
             }),
             new iam.PolicyStatement({
@@ -75,6 +99,8 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       environment: {
         SQS_QUEUE_URL: queue.queueUrl,
+        SLACK_BOT_TOKEN_SSM_KEY: `/slack2bedrock-image-generator/${stage}/SLACK_BOT_TOKEN`,
+        SLACK_SIGNING_SECRET_SSM_KEY: `/slack2bedrock-image-generator/${stage}/SLACK_SIGNING_SECRET`,
       },
     });
 

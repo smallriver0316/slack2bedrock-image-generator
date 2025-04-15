@@ -8,13 +8,14 @@ from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
-sqs = boto3.client("sqs")
-ssm = boto3.client("ssm")
-
+REGION = os.environ.get("AWS_REGION", "")
 STAGE = os.environ.get("STAGE", "")
 SQS_QUEUE_URL = os.environ.get("SQS_QUEUE_URL", "")
+
+sqs = boto3.client("sqs", region_name=REGION)
+ssm = boto3.client("ssm", region_name=REGION)
 
 params = ssm.get_parameters_by_path(
     Path=f"/slack2bedrock-image-generator/{STAGE}/",
@@ -36,8 +37,7 @@ app = App(
 
 @app.event("app_mention")
 def handle_app_mention_events(event, say):
-    logger.info(event)
-    say("What's up?")
+    logger.debug(event)
 
     channel_id = event.get("channel", "")
     input_text = re.sub("<@.+>", "", event.get("text", "")).strip()
@@ -52,6 +52,6 @@ def handle_app_mention_events(event, say):
 
 
 def handler(event, context):
-    logger.info(event)
+    logger.debug(event)
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)

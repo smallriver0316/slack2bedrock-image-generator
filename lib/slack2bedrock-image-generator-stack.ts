@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { SqsDestination } from 'aws-cdk-lib/aws-lambda-destinations';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
@@ -25,10 +27,20 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
     });
 
     // SQS queue for image generation requests
+    const dlq = new sqs.Queue(this, `DLQ-${stage}`, {
+      queueName: `slack2bedrock-image-request-dlq-${stage}`,
+      retentionPeriod: cdk.Duration.minutes(1),
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const queue = new sqs.Queue(this, `Queue-${stage}`, {
       queueName: `slack2bedrock-image-request-queue-${stage}`,
-      retentionPeriod: cdk.Duration.days(7),
+      retentionPeriod: cdk.Duration.minutes(1),
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      deadLetterQueue: {
+        maxReceiveCount: 1,
+        queue: dlq,
+      }
     });
 
     // SSM parameter
@@ -149,9 +161,20 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
               actions: [
                 'sqs:ReceiveMessage',
                 'sqs:DeleteMessage',
+                'sqs:SendMessage',
               ],
               resources: [
                 queue.queueArn,
+                dlq.queueArn,
+              ],
+            }),
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                'ssm:GetParameter',
+              ],
+              resources: [
+                `arn:aws:ssm:${region}:${accountId}:parameter/slack2bedrock-image-generator/${stage}*`,
               ],
             }),
             new iam.PolicyStatement({
@@ -180,9 +203,12 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
       role: subscriberLambdaRole,
       memorySize: 1024,
       timeout: cdk.Duration.seconds(30),
+      onFailure: new SqsDestination(dlq),
       environment: {
+        SQS_QUEUE_URL: queue.queueUrl,
         BUCKET_NAME: `slack2bedrock-image-bucket-${stage}`,
         MODEL_ID: 'stability.stable-diffusion-xl-v1',
+        STAGE: stage,
       },
     });
 
@@ -192,6 +218,8 @@ export class Slack2BedrockImageGeneratorStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    subscriberLambda.addEventSource(new cdk.aws_lambda_event_sources.SqsEventSource(queue));
+    subscriberLambda.addEventSource(new SqsEventSource(queue, {
+      batchSize: 1,
+    }));
   }
 }

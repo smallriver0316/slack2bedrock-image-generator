@@ -30,13 +30,13 @@ At first, create slack account and the workspace beforehand.
 * Create New App from scratch.
 * Enter your app name and select your slack workspace.
 * Move to the menu of OAuth & Permissions and create bot token.
-  * Add "chat:write" as an OAuth Scope.
+  * Add "chat:write" and "files:write" as an OAuth Scope.
   * Then you can get Bot User OAuth Token.
 * Install app to your workspace.
 
 Copy the Signing Secret and Bot User OAuth Token for deployment of AWS services.
 
-About the settings of this app, als refer to slack_manifest.yml here.
+About the settings of this app, also refer to slack_manifest.yml here.
 
 ### Deploy services
 

@@ -22,6 +22,35 @@ $ cdk --version
 
 ## How to deploy
 
+### Create Slack app
+
+At first, create slack account and the workspace beforehand.
+
+* Access to [https://apps.slack.com](https://apps.slack.com).
+* Create New App from scratch.
+* Enter your app name and select your slack workspace.
+* Move to the menu of OAuth & Permissions and create bot token.
+  * Add "chat:write" as an OAuth Scope.
+  * Then you can get Bot User OAuth Token.
+* Install app to your workspace.
+
+Copy the Signing Secret and Bot User OAuth Token for deployment of AWS services.
+
+About the settings of this app, als refer to slack_manifest.yml here.
+
+### Deploy services
+
+Set the slack secret and token to config/slack_config.ts.
+
+```ts
+export const slackConfig = {
+  SLACK_BOT_TOKEN: '<bot user oauth token>',
+  SLACK_SIGNING_SECRET: '<signing secret>',
+};
+```
+
+Then execute deployment.
+
 ```bash
 # setting environment variables is necessary at every time
 export AWS_PROFILE=<Your target profile>
@@ -37,3 +66,16 @@ cdk deploy
 # deploy with stage name(default is dev)
 cdk deploy -c stage=<stage name>
 ```
+
+### Set Event Subscriptions
+
+* Copy the function URL of publihser lambda which you deployed in AWS console.
+* Go back to the slack app setting page and move to the Event Subscriptions menu.
+* Enable Events and set the URL as Request URL.
+  * Then the subscription will be verified automatically.
+* Select which bot events to subscribe from "Subscribe bot events".
+  * Select "app_mention:read"
+* Reinstall your app.
+* Integrate your app on Slack desktop app.
+
+Then you can communicate with your chat bot!

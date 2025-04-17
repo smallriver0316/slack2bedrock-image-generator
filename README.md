@@ -45,7 +45,7 @@ About the settings of this app, also refer to slack_manifest.yml here.
 
 Install python packages by following commands before deployment.
 
-requirements.txt exists in each functions' directory.
+requirements.txt exists in each function's directory.
 So if need to update it, execute `pipenv requirements > requirements.txt`.
 
 ```bash

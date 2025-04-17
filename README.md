@@ -30,7 +30,7 @@ At first, create slack account and the workspace beforehand.
 * Create New App from scratch.
 * Enter your app name and select your slack workspace.
 * Move to the menu of OAuth & Permissions and create bot token.
-  * Add "chat:write" and "files:write" as an OAuth Scope.
+  * Add `chat:write` and `files:write` as an OAuth Scope.
   * Then you can get Bot User OAuth Token.
 * Install app to your workspace.
 
@@ -74,7 +74,7 @@ cdk deploy -c stage=<stage name>
 * Enable Events and set the URL as Request URL.
   * Then the subscription will be verified automatically.
 * Select which bot events to subscribe from "Subscribe bot events".
-  * Select "app_mention:read"
+  * Select `app_mention:read`.
 * Reinstall your app.
 * Integrate your app on Slack desktop app.
 

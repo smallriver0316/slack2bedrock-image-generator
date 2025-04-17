@@ -18,6 +18,9 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 ```bash
 $ cdk --version
 2.1005.0 (build be378de)
+
+$ pipenv --version
+pipenv, version 2024.0.1
 ```
 
 ## How to deploy
@@ -37,6 +40,23 @@ At first, create slack account and the workspace beforehand.
 Copy the Signing Secret and Bot User OAuth Token for deployment of AWS services.
 
 About the settings of this app, also refer to slack_manifest.yml here.
+
+### Install python packages for lambda functions
+
+Install python packages by following commands before deployment.
+
+requirements.txt exists in each functions' directory.
+So if need to update it, execute `pipenv requirements > requirements.txt`.
+
+```bash
+cd publisher/
+pipenv requirements > requirements.txt
+pip install -r requirements.txt -t src/
+
+cd ../subscriber/
+pipenv requirements > requirements.txt
+pip install -r requirements.txt -t src/
+```
 
 ### Deploy services
 
